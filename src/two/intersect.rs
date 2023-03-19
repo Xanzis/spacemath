@@ -20,11 +20,13 @@ impl From<usize> for Count {
 }
 
 pub trait Intersect<T> {
-    // count of intersections
-    fn intersects(&self, other: &T) -> Count;
-
     fn intersects_at(&self, _other: &T) -> Vec<Point> {
         unimplemented!()
+    }
+
+    // count of intersections
+    fn intersects(&self, other: &T) -> Count {
+        self.intersects_at(other).len().into()
     }
 }
 
@@ -61,10 +63,6 @@ impl Intersect<Line> for Line {
 }
 
 impl Intersect<Line> for Segment {
-    fn intersects(&self, other: &Line) -> Count {
-        self.intersects_at(other).len().into()
-    }
-
     fn intersects_at(&self, other: &Line) -> Vec<Point> {
         self.to_line()
             .intersects_at(other)
@@ -75,20 +73,12 @@ impl Intersect<Line> for Segment {
 }
 
 impl Intersect<Segment> for Line {
-    fn intersects(&self, other: &Segment) -> Count {
-        other.intersects(&self)
-    }
-
     fn intersects_at(&self, other: &Segment) -> Vec<Point> {
         other.intersects_at(&self)
     }
 }
 
 impl Intersect<Line> for Circle {
-    fn intersects(&self, other: &Line) -> Count {
-        self.intersects_at(other).len().into()
-    }
-
     fn intersects_at(&self, other: &Line) -> Vec<Point> {
         // simplify the problem to a line through a circle at the origin
         let r = self.radius;
@@ -123,20 +113,12 @@ impl Intersect<Line> for Circle {
 }
 
 impl Intersect<Circle> for Line {
-    fn intersects(&self, other: &Circle) -> Count {
-        other.intersects(self)
-    }
-
     fn intersects_at(&self, other: &Circle) -> Vec<Point> {
         other.intersects_at(self)
     }
 }
 
 impl Intersect<Circle> for Ray {
-    fn intersects(&self, other: &Circle) -> Count {
-        self.intersects_at(other).len().into()
-    }
-
     fn intersects_at(&self, other: &Circle) -> Vec<Point> {
         let line = self.to_line();
         line.intersects_at(other)
@@ -147,20 +129,12 @@ impl Intersect<Circle> for Ray {
 }
 
 impl Intersect<Ray> for Circle {
-    fn intersects(&self, other: &Ray) -> Count {
-        other.intersects(self)
-    }
-
     fn intersects_at(&self, other: &Ray) -> Vec<Point> {
         other.intersects_at(self)
     }
 }
 
 impl Intersect<Ray> for Arc {
-    fn intersects(&self, other: &Ray) -> Count {
-        self.intersects_at(other).len().into()
-    }
-
     fn intersects_at(&self, other: &Ray) -> Vec<Point> {
         let circle = self.to_circle();
         circle
@@ -172,10 +146,6 @@ impl Intersect<Ray> for Arc {
 }
 
 impl Intersect<Arc> for Ray {
-    fn intersects(&self, other: &Arc) -> Count {
-        other.intersects(&self)
-    }
-
     fn intersects_at(&self, other: &Arc) -> Vec<Point> {
         other.intersects_at(&self)
     }
