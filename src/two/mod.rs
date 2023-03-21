@@ -1,3 +1,4 @@
+pub mod boundary;
 pub mod intersect;
 pub mod line;
 pub mod point;
