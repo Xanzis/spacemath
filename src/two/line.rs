@@ -205,7 +205,7 @@ impl Arc {
     }
 
     pub fn q(&self) -> Point {
-        (Point::unit(self.p_ang) * self.radius) + self.center
+        (Point::unit(self.q_ang) * self.radius) + self.center
     }
 
     // public to crate only - use the Shift trait
