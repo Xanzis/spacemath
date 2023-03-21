@@ -68,6 +68,18 @@ impl Point {
             y: self.x,
         }
     }
+
+    // for use in gauss' area formula
+    pub fn shoelace(self, other: Point) -> f64 {
+        (self.x * other.y) - (other.x * self.y)
+    }
+
+    pub fn transpose(self) -> Point {
+        Point {
+            x: self.y,
+            y: self.x,
+        }
+    }
 }
 
 impl fmt::Display for Point {

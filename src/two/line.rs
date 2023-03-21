@@ -60,6 +60,14 @@ impl Segment {
         (self.p, self.q)
     }
 
+    pub fn p(self) -> Point {
+        self.p
+    }
+
+    pub fn q(self) -> Point {
+        self.q
+    }
+
     pub fn to_line(self) -> Line {
         let a = self.q.y - self.p.y;
         let b = self.p.x - self.q.x;
@@ -87,6 +95,13 @@ impl Segment {
         // useful for checking if a colinear point is on the segment
         let (p, q) = (self.p, self.q);
         r.x <= p.x.max(q.x) && r.x >= p.x.min(q.x) && r.y <= p.y.max(q.y) && r.y >= p.y.min(q.y)
+    }
+
+    pub fn reverse(self) -> Self {
+        Segment {
+            p: self.q,
+            q: self.p,
+        }
     }
 }
 
@@ -150,6 +165,10 @@ impl Circle {
     pub(crate) fn offset_y(&mut self, v: f64) {
         self.center.y += v;
     }
+
+    pub fn at_ang(&self, ang: f64) -> Point {
+        (Point::unit(ang) * self.radius) + self.center
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -158,11 +177,11 @@ pub struct Arc {
     radius: f64,
     p_ang: f64,
     q_ang: f64,
+    ccw: bool,
 }
 
 impl Arc {
-    pub fn from_center_ang(center: Point, radius: f64, p_ang: f64, q_ang: f64) -> Self {
-        assert!(q_ang > p_ang);
+    pub fn from_center_ang(center: Point, radius: f64, p_ang: f64, q_ang: f64, ccw: bool) -> Self {
         assert!((0.0 <= q_ang) && (std::f64::consts::TAU >= q_ang));
         assert!((0.0 <= p_ang) && (std::f64::consts::TAU >= p_ang));
         Arc {
@@ -170,6 +189,7 @@ impl Arc {
             radius,
             p_ang,
             q_ang,
+            ccw,
         }
     }
 
@@ -201,11 +221,44 @@ impl Arc {
         // find whether r lies on the wedge described by center, p, and q
         // useful for determining whether a coradial r lies in the arc
         let ang = (r - self.center).ang();
-        if self.p_ang < self.q_ang {
-            dbg!(self.p_ang <= ang && ang <= self.q_ang)
+
+        let is_in_ccw_arc = if self.p_ang < self.q_ang {
+            self.p_ang <= ang && ang <= self.q_ang
         } else {
             // angle bounds cross 0
-            dbg!(self.p_ang <= ang || ang <= self.q_ang)
+            self.p_ang <= ang || ang <= self.q_ang
+        };
+
+        // invert the result if the arc is negative (ccw == false)
+        if self.ccw {
+            is_in_ccw_arc
+        } else {
+            !is_in_ccw_arc
+        }
+    }
+
+    pub fn sample_points(&self, n: usize) -> Vec<Point> {
+        // sample evenly space points from the arc, with a minimum of two
+        assert!(n >= 2);
+
+        let ang_int = (self.q_ang - self.p_ang) / (n - 1) as f64;
+
+        let mut res = vec![self.p()];
+
+        for i in 1..n {
+            let ang = self.p_ang + (ang_int * i as f64);
+            res.push(self.to_circle().at_ang(ang));
+        }
+
+        res
+    }
+
+    pub fn reverse(&self) -> Self {
+        Self {
+            ccw: !self.ccw,
+            p_ang: self.q_ang,
+            q_ang: self.p_ang,
+            ..*self
         }
     }
 }
