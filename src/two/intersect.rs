@@ -9,6 +9,40 @@ pub enum Count {
     Inf,
 }
 
+impl Count {
+    pub fn is_even(self) -> bool {
+        match self {
+            Count::Zero => true,
+            Count::One => false,
+            Count::Many(x) => x % 2 == 0,
+            Count::Inf => false,
+        }
+    }
+
+    pub fn is_odd(self) -> bool {
+        match self {
+            Count::Zero => false,
+            Count::One => true,
+            Count::Many(x) => x % 2 == 1,
+            Count::Inf => false,
+        }
+    }
+
+    pub fn is_zero(self) -> bool {
+        match self {
+            Count::Zero => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_nonzero(self) -> bool {
+        match self {
+            Count::Zero => false,
+            _ => true,
+        }
+    }
+}
+
 impl From<usize> for Count {
     fn from(val: usize) -> Self {
         match val {
@@ -29,6 +63,20 @@ pub trait Intersect<T> {
         self.intersects_at(other).len().into()
     }
 }
+
+macro_rules! reflexive_intersect {
+    ($a:ident, $b:ident) => {
+        impl Intersect<$b> for $a {
+            fn intersects_at(&self, other: &$b) -> Vec<Point> {
+                other.intersects_at(self)
+            }
+        }
+    };
+}
+
+pub(crate) use reflexive_intersect;
+
+// Line intersection definitions
 
 impl Intersect<Line> for Line {
     fn intersects(&self, other: &Line) -> Count {
@@ -62,19 +110,69 @@ impl Intersect<Line> for Line {
     }
 }
 
-impl Intersect<Line> for Segment {
-    fn intersects_at(&self, other: &Line) -> Vec<Point> {
-        self.to_line()
-            .intersects_at(other)
+// Segment intersection definitions
+
+impl<T: Intersect<Line>> Intersect<T> for Segment {
+    fn intersects_at(&self, other: &T) -> Vec<Point> {
+        other
+            .intersects_at(&self.to_line())
             .into_iter()
             .filter(|p| self.bounds_contain(*p))
             .collect()
     }
 }
 
-impl Intersect<Segment> for Line {
-    fn intersects_at(&self, other: &Segment) -> Vec<Point> {
-        other.intersects_at(&self)
+// each bounded edge type (segment, ray, arc) needs relexive definitions to the base edge types
+reflexive_intersect!(Line, Segment);
+reflexive_intersect!(Circle, Segment);
+
+// Ray intersection definitions
+
+impl<T: Intersect<Line>> Intersect<T> for Ray {
+    fn intersects_at(&self, other: &T) -> Vec<Point> {
+        other
+            .intersects_at(&self.to_line())
+            .into_iter()
+            .filter(|p| self.bounds_contain(*p))
+            .collect()
+    }
+}
+
+reflexive_intersect!(Line, Ray);
+reflexive_intersect!(Circle, Ray);
+
+// Circle intersection definitions
+
+impl Intersect<Circle> for Circle {
+    fn intersects_at(&self, other: &Circle) -> Vec<Point> {
+        let c1 = self.center;
+        let r1 = self.radius;
+        let c2 = other.center;
+        let r2 = other.radius;
+
+        let dist = c1.dist(c2);
+
+        if dist > (r1 + r2) {
+            return vec![];
+        }
+
+        if dist == (r1 + r2) {
+            return vec![((c1 * r2) + (c2 * r1)) / dist];
+        }
+
+        let mid = c1.mid(c2);
+
+        let a = (r1.powi(2) - r2.powi(2)) / (2.0 * dist.powi(2));
+
+        let inner = (2.0 * (r1.powi(2) + r2.powi(2)) / dist.powi(2)) - (a * 2.0).powi(2);
+        let b = (inner - 1.0).sqrt() / 2.0;
+
+        let b_dir = Point::new(c2.y - c1.y, c1.x - c2.x);
+
+        let p1 = (mid + ((c2 - c1) * a)) + (b_dir * b);
+        let p2 = (mid + ((c2 - c1) * a)) - (b_dir * b);
+
+        vec![p1, p2]
     }
 }
 
@@ -112,44 +210,22 @@ impl Intersect<Line> for Circle {
     }
 }
 
-impl Intersect<Circle> for Line {
-    fn intersects_at(&self, other: &Circle) -> Vec<Point> {
-        other.intersects_at(self)
-    }
-}
+reflexive_intersect!(Line, Circle);
 
-impl Intersect<Circle> for Ray {
-    fn intersects_at(&self, other: &Circle) -> Vec<Point> {
-        let line = self.to_line();
-        line.intersects_at(other)
+// Arc intersection definitions
+
+impl<T: Intersect<Circle>> Intersect<T> for Arc {
+    fn intersects_at(&self, other: &T) -> Vec<Point> {
+        other
+            .intersects_at(&self.to_circle())
             .into_iter()
             .filter(|p| self.bounds_contain(*p))
             .collect()
     }
 }
 
-impl Intersect<Ray> for Circle {
-    fn intersects_at(&self, other: &Ray) -> Vec<Point> {
-        other.intersects_at(self)
-    }
-}
-
-impl Intersect<Ray> for Arc {
-    fn intersects_at(&self, other: &Ray) -> Vec<Point> {
-        let circle = self.to_circle();
-        circle
-            .intersects_at(other)
-            .into_iter()
-            .filter(|p| self.bounds_contain(*p))
-            .collect()
-    }
-}
-
-impl Intersect<Arc> for Ray {
-    fn intersects_at(&self, other: &Arc) -> Vec<Point> {
-        other.intersects_at(&self)
-    }
-}
+reflexive_intersect!(Line, Arc);
+reflexive_intersect!(Circle, Arc);
 
 #[cfg(test)]
 mod tests {
@@ -270,7 +346,7 @@ mod tests {
     #[test]
     fn ray_arc_two() {
         let a = Ray::new((-2.0, 1.0).into(), (2.0f64 / 3.0).atan());
-        let b = Arc::from_center_ang((1.0, 2.0).into(), 2.0, 0.0, 4.5);
+        let b = Arc::from_center_ang((1.0, 2.0).into(), 2.0, 0.0, 4.5, true);
 
         assert_eq!(a.intersects(&b), Count::Many(2));
         assert_eq!(a.intersects(&b), a.intersects_at(&b).len().into());
@@ -289,7 +365,7 @@ mod tests {
     #[test]
     fn ray_arc_one() {
         let a = Ray::new((-2.0, 1.0).into(), (2.0f64 / 3.0).atan());
-        let b = Arc::from_center_ang((1.0, 2.0).into(), 2.0, 1.5, 4.5);
+        let b = Arc::from_center_ang((1.0, 2.0).into(), 2.0, 1.5, 4.5, true);
 
         assert_eq!(a.intersects(&b), Count::One);
         assert_eq!(a.intersects(&b), a.intersects_at(&b).len().into());
@@ -298,5 +374,36 @@ mod tests {
         let p = (-0.975, 1.683).into();
 
         assert!(x.dist(p) < 1e-3);
+    }
+
+    #[test]
+    fn circle_circle_zero() {
+        let a = Circle::new((-3.0, 4.0).into(), 2.0);
+        let b = Circle::new((20.0, 3.0).into(), 4.0);
+
+        assert_eq!(a.intersects(&b), Count::Zero);
+        assert_eq!(a.intersects(&b), a.intersects_at(&b).len().into());
+    }
+
+    #[test]
+    fn circle_circle_two() {
+        let a = Circle::new((1.0, -2.0).into(), 5.0);
+        let b = Circle::new((4.0, 3.0).into(), 2.0);
+
+        assert_eq!(a.intersects(&b), Count::Many(2));
+        assert_eq!(a.intersects(&b), a.intersects_at(&b).len().into());
+
+        let x = a.intersects_at(&b)[0];
+        let y = a.intersects_at(&b)[1];
+        let p = (2.003, 2.898).into();
+        let q = (4.850, 1.190).into();
+
+        println!("{:?}", x);
+        println!("{:?}", y);
+
+        let case_a = (x.dist(p) < 1e-3) && (y.dist(q) < 1e-3);
+        let case_b = (x.dist(q) < 1e-3) && (y.dist(p) < 1e-3);
+
+        assert!(case_a || case_b);
     }
 }
