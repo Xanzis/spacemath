@@ -94,7 +94,19 @@ impl Segment {
         // find whether r lies within the segment's bounding box
         // useful for checking if a colinear point is on the segment
         let (p, q) = (self.p, self.q);
-        r.x <= p.x.max(q.x) && r.x >= p.x.min(q.x) && r.y <= p.y.max(q.y) && r.y >= p.y.min(q.y)
+
+        // tolerance is needed because otherwise comparisons will usually fail
+        // on horizontal or vertical lines (bounding box is zero, comp fails on floating point artifacts)
+        // TODO integrate into a unified tolerance scheme (Tol generic parameter should have <=, >=)
+
+        let tol = 1.0e-9;
+
+        let a = r.x <= p.x.max(q.x) + tol;
+        let b = r.x >= p.x.min(q.x) - tol;
+        let c = r.y <= p.y.max(q.y) + tol;
+        let d = r.y >= p.y.min(q.y) - tol;
+
+        a && b && c && d
     }
 
     pub fn reverse(self) -> Self {
