@@ -23,6 +23,17 @@ impl Line {
         Line { a, b, c }
     }
 
+    pub fn perp_through(&self, p: Point) -> Line {
+        // a perpendicular line passing through the origin
+        let c = 0.0;
+        let a = -1.0 * self.b;
+        let b = self.a;
+        let mut res = Line { a, b, c };
+        res.offset_x(p.x);
+        res.offset_y(p.y);
+        res
+    }
+
     // public to crate only - use the Shift trait
     pub(crate) fn offset_x(&mut self, u: f64) {
         // shift the line by some x value
