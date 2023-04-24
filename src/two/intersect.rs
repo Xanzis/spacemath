@@ -1,6 +1,8 @@
 use super::shift::Shift;
 use super::{Arc, Circle, Line, Point, Ray, Segment};
 
+use super::dist::Dist;
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Count {
     Zero,

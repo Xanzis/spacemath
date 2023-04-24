@@ -1,3 +1,4 @@
+use super::dist::Dist;
 use super::intersect::{reflexive_intersect, Intersect};
 use super::line::Ray;
 use super::Point;
@@ -84,6 +85,15 @@ impl From<super::Segment> for Edge {
     }
 }
 
+impl Dist for Edge {
+    fn dist(&self, r: Point) -> f64 {
+        match self {
+            &Edge::Arc(ref a) => a.dist(r),
+            &Edge::Segment(ref c) => c.dist(r),
+        }
+    }
+}
+
 // a closed 2d boundary
 #[derive(Clone, Debug)]
 pub struct Boundary {
@@ -134,6 +144,10 @@ impl Boundary {
     pub fn points(&self) -> Vec<Point> {
         // maybe lend instead of clone
         self.points.clone()
+    }
+
+    pub fn edges<'a>(&'a self) -> impl Iterator<Item = &'a Edge> + 'a {
+        self.edges.iter()
     }
 
     pub fn orient_positive(&mut self) {

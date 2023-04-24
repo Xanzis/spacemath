@@ -1,6 +1,8 @@
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 
+use super::dist::Dist;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     pub x: f64,
@@ -33,11 +35,6 @@ impl Point {
 
     pub fn norm(self) -> f64 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
-    }
-
-    pub fn dist(self, other: Point) -> f64 {
-        let v = self - other;
-        v.norm()
     }
 
     pub fn dot(self, other: Point) -> f64 {
@@ -147,5 +144,12 @@ impl Div<f64> for Point {
             x: self.x / other,
             y: self.y / other,
         }
+    }
+}
+
+impl Dist for Point {
+    fn dist(&self, other: Point) -> f64 {
+        let v = *self - other;
+        v.norm()
     }
 }
