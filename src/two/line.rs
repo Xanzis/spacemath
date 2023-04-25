@@ -1,5 +1,6 @@
 use std::fmt;
 
+use super::intersect::Intersect;
 use super::Point;
 
 // a line, represented as ax + by = c
@@ -32,6 +33,13 @@ impl Line {
         res.offset_x(p.x);
         res.offset_y(p.y);
         res
+    }
+
+    pub fn projected(&self, p: Point) -> Point {
+        // project the point onto the line
+
+        let perp = self.perp_through(p);
+        self.intersects_at(&perp)[0]
     }
 
     // public to crate only - use the Shift trait

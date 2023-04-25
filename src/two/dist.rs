@@ -15,8 +15,10 @@ impl Dist for Line {
 impl Dist for Segment {
     fn dist(&self, r: Point) -> f64 {
         // if out of bounds, choose the closest node
-        if self.bounds_contain(r) {
-            self.to_line().dist(r)
+        let projected = self.to_line().projected(r);
+
+        if self.bounds_contain(projected) {
+            projected.dist(r)
         } else {
             r.dist(self.p()).min(r.dist(self.q()))
         }

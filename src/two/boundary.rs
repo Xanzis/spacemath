@@ -146,6 +146,10 @@ impl Boundary {
         self.points.clone()
     }
 
+    pub fn num_edges(&self) -> usize {
+        self.edges.len()
+    }
+
     pub fn edges<'a>(&'a self) -> impl Iterator<Item = &'a Edge> + 'a {
         self.edges.iter()
     }
@@ -202,6 +206,15 @@ impl Intersect<Boundary> for Boundary {
         }
 
         res
+    }
+}
+
+impl Dist for Boundary {
+    fn dist(&self, r: Point) -> f64 {
+        self.edges()
+            .map(|e| e.dist(r))
+            .min_by(|x, y| x.partial_cmp(y).unwrap())
+            .unwrap()
     }
 }
 
