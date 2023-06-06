@@ -81,7 +81,11 @@ impl Point {
 
 impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
+        write!(f, "(")?;
+        fmt::Display::fmt(&self.x, f)?;
+        write!(f, ", ")?;
+        fmt::Display::fmt(&self.y, f)?;
+        write!(f, ")")
     }
 }
 

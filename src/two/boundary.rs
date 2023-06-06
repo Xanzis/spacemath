@@ -47,6 +47,26 @@ impl Edge {
             Edge::Arc(a) => Edge::Arc(a.reverse()),
         }
     }
+
+    pub fn into_segments(self, len: f64) -> Vec<Self> {
+        // splits the edge into segments, with a target length len
+        // if len is too large, only returns one segment from p to q
+
+        match self {
+            Edge::Segment(s) => vec![Edge::Segment(s)],
+            Edge::Arc(a) => {
+                let intervals = (a.arc_length() / len).max(1.0).round() as usize;
+                let points = a.sample_points(intervals + 1);
+
+                let mut res = Vec::new();
+                for pq in points.windows(2) {
+                    res.push(Edge::Segment(super::Segment::new(pq[0], pq[1])));
+                }
+
+                res
+            }
+        }
+    }
 }
 
 impl Intersect<Edge> for Edge {
@@ -189,6 +209,35 @@ impl Boundary {
         // note: if boundaries do not intersect arcs don't need to be handled separately
         // also, only need to check one point, if one is contained all are
         self.contains(other.points[0])
+    }
+
+    pub fn bounding_box(&self) -> (Point, Point) {
+        // finds the (left bottom, right top) corners of the boundary's bounding box
+
+        let points = self.points();
+
+        let x_max = points
+            .iter()
+            .map(|p| p.x)
+            .max_by(|x, y| x.partial_cmp(y).unwrap())
+            .unwrap();
+        let y_max = points
+            .iter()
+            .map(|p| p.y)
+            .max_by(|x, y| x.partial_cmp(y).unwrap())
+            .unwrap();
+        let x_min = points
+            .iter()
+            .map(|p| p.x)
+            .min_by(|x, y| x.partial_cmp(y).unwrap())
+            .unwrap();
+        let y_min = points
+            .iter()
+            .map(|p| p.y)
+            .min_by(|x, y| x.partial_cmp(y).unwrap())
+            .unwrap();
+
+        ((x_min, y_min).into(), (x_max, y_max).into())
     }
 }
 

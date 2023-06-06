@@ -231,6 +231,26 @@ impl Arc {
         }
     }
 
+    pub fn center(&self) -> Point {
+        self.center
+    }
+
+    pub fn radius(&self) -> f64 {
+        self.radius
+    }
+
+    pub fn arc_length(&self) -> f64 {
+        (self.radius * (self.q_ang - self.p_ang)).abs()
+    }
+
+    pub fn p_ang(&self) -> f64 {
+        self.p_ang
+    }
+
+    pub fn q_ang(&self) -> f64 {
+        self.q_ang
+    }
+
     pub fn p(&self) -> Point {
         (Point::unit(self.p_ang) * self.radius) + self.center
     }
