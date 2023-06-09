@@ -251,6 +251,27 @@ impl Arc {
         self.q_ang
     }
 
+    pub fn pq_ang_unbounded(&self) -> (f64, f64) {
+        // give a q greater than p if arc is ccw
+        // and a p greater than q if arc is !ccw
+        // without the [0, 2pi] bounds in internal representation
+        // useful for sampling points or outside interfaces
+
+        if self.ccw {
+            if self.q_ang > self.p_ang {
+                (self.p_ang, self.q_ang)
+            } else {
+                (self.p_ang, self.q_ang + std::f64::consts::TAU)
+            }
+        } else {
+            if self.p_ang > self.q_ang {
+                (self.p_ang, self.q_ang)
+            } else {
+                (self.p_ang + std::f64::consts::TAU, self.q_ang)
+            }
+        }
+    }
+
     pub fn p(&self) -> Point {
         (Point::unit(self.p_ang) * self.radius) + self.center
     }
@@ -292,12 +313,15 @@ impl Arc {
         // sample evenly space points from the arc, with a minimum of two
         assert!(n >= 2);
 
-        let ang_int = (self.q_ang - self.p_ang) / (n - 1) as f64;
+        // use unbounded, direction-corrected p and q angles
+        let (p_ang, q_ang) = self.pq_ang_unbounded();
+
+        let ang_int = (q_ang - p_ang) / (n - 1) as f64;
 
         let mut res = vec![self.p()];
 
         for i in 1..n {
-            let ang = self.p_ang + (ang_int * i as f64);
+            let ang = p_ang + (ang_int * i as f64);
             res.push(self.to_circle().at_ang(ang));
         }
 
