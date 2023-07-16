@@ -39,7 +39,7 @@ impl Line {
         // project the point onto the line
 
         let perp = self.perp_through(p);
-        self.intersects_at(&perp)[0]
+        self.intersects_at(&perp).get_one().unwrap()
     }
 
     // public to crate only - use the Shift trait

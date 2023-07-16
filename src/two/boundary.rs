@@ -1,5 +1,5 @@
 use super::dist::Dist;
-use super::intersect::{reflexive_intersect, Intersect};
+use super::intersect::{reflexive_intersect, Intersect, Intersections};
 use super::line::Ray;
 use super::Point;
 
@@ -70,7 +70,7 @@ impl Edge {
 }
 
 impl Intersect<Edge> for Edge {
-    fn intersects_at(&self, other: &Edge) -> Vec<Point> {
+    fn intersects_at(&self, other: &Edge) -> Intersections {
         use Edge::*;
 
         match (*self, *other) {
@@ -83,7 +83,7 @@ impl Intersect<Edge> for Edge {
 }
 
 impl Intersect<Ray> for Edge {
-    fn intersects_at(&self, other: &Ray) -> Vec<Point> {
+    fn intersects_at(&self, other: &Ray) -> Intersections {
         match self {
             Edge::Arc(a) => a.intersects_at(other),
             Edge::Segment(s) => s.intersects_at(other),
@@ -242,8 +242,8 @@ impl Boundary {
 }
 
 impl Intersect<Boundary> for Boundary {
-    fn intersects_at(&self, other: &Boundary) -> Vec<Point> {
-        let mut res = Vec::new();
+    fn intersects_at(&self, other: &Boundary) -> Intersections {
+        let mut res = Intersections::Zero;
 
         // n^2 approach, check every possible edge pairing
         let pairings = self
@@ -251,7 +251,7 @@ impl Intersect<Boundary> for Boundary {
             .iter()
             .flat_map(|e| std::iter::repeat(e).zip(&other.edges));
         for (e1, e2) in pairings {
-            res.extend(e1.intersects_at(e2));
+            res = res.combine(e1.intersects_at(e2));
         }
 
         res
@@ -315,7 +315,7 @@ mod tests {
             Segment::new((0.0, 1.0).into(), (0.0, 0.0).into()),
         ];
 
-        let mut square_bound = Boundary::new(edges);
+        let square_bound = Boundary::new(edges);
 
         let edges = vec![Arc::from_center_ang((0.0, 0.0).into(), 1.0, 0.0, 0.0, true)];
 
@@ -328,7 +328,6 @@ mod tests {
     fn bounds_contain() {
         use super::super::line::{Arc, Segment};
         use super::Boundary;
-        use super::Intersect;
 
         let edges = vec![
             Segment::new((0.1, 0.0).into(), (1.0, 0.0).into()),
@@ -337,7 +336,7 @@ mod tests {
             Segment::new((0.1, 1.0).into(), (0.1, 0.0).into()),
         ];
 
-        let mut square_bound = Boundary::new(edges);
+        let square_bound = Boundary::new(edges);
 
         let edges: Vec<super::Edge> = vec![
             Arc::from_center_ang(
@@ -356,6 +355,6 @@ mod tests {
 
         let d_bound = Boundary::new(edges);
 
-        assert!(d_bound.contains_boundary(&d_bound));
+        assert!(d_bound.contains_boundary(&square_bound));
     }
 }

@@ -8,7 +8,7 @@ pub trait Dist {
 impl Dist for Line {
     fn dist(&self, r: Point) -> f64 {
         let perp = self.perp_through(r);
-        perp.intersects_at(self)[0].dist(r)
+        perp.intersects_at(self).get_one().unwrap().dist(r)
     }
 }
 

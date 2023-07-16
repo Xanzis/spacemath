@@ -1,6 +1,5 @@
 pub mod two;
 
-
 // enum for canonical orientations
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Orient {
