@@ -1,5 +1,5 @@
-use super::Point;
 use super::dist::Dist;
+use super::Point;
 use crate::Orient;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
