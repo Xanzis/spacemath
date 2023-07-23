@@ -253,16 +253,15 @@ impl Intersect<Line> for Line {
     }
 
     fn intersects_at(&self, other: &Line) -> Intersections {
-        match self.intersects(other) {
-            Count::One => {
-                let x = ((self.b * other.c) - (self.c * other.b))
-                    / ((self.b * other.a) - (self.a * other.b));
-                let y = ((self.c * other.a) - (self.a * other.c))
-                    / ((self.b * other.a) - (self.a * other.b));
+        let denom = (self.b * other.a) - (self.a * other.b);
 
-                Intersections::One(Point::new(x, y))
-            }
-            _ => Intersections::Zero,
+        // maybe some tolerance?
+        if denom != 0.0 {
+            let x = ((self.b * other.c) - (self.c * other.b)) / denom;
+            let y = ((self.c * other.a) - (self.a * other.c)) / denom;
+            Intersections::One(Point::new(x, y))
+        } else {
+            Intersections::Zero
         }
     }
 }
