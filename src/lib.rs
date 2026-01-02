@@ -1,3 +1,4 @@
+pub mod three;
 pub mod two;
 
 // enum for canonical orientations
