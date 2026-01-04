@@ -83,9 +83,45 @@ impl From<(f64, f64, f64)> for Point {
     }
 }
 
+impl From<(f32, f32, f32)> for Point {
+    fn from(x: (f32, f32, f32)) -> Self {
+        Point::new(x.0 as f64, x.1 as f64, x.2 as f64)
+    }
+}
+
+impl From<[f64; 3]> for Point {
+    fn from(x: [f64; 3]) -> Self {
+        Point::new(x[0], x[1], x[2])
+    }
+}
+
+impl From<[f32; 3]> for Point {
+    fn from(x: [f32; 3]) -> Self {
+        Point::new(x[0] as f64, x[1] as f64, x[2] as f64)
+    }
+}
+
 impl From<Point> for (f64, f64, f64) {
     fn from(x: Point) -> Self {
         (x.x, x.y, x.z)
+    }
+}
+
+impl From<Point> for (f32, f32, f32) {
+    fn from(x: Point) -> Self {
+        (x.x as f32, x.y as f32, x.z as f32)
+    }
+}
+
+impl From<Point> for [f64; 3] {
+    fn from(x: Point) -> Self {
+        [x.x, x.y, x.z]
+    }
+}
+
+impl From<Point> for [f32; 3] {
+    fn from(x: Point) -> Self {
+        [x.x as f32, x.y as f32, x.z as f32]
     }
 }
 
