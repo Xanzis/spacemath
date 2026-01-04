@@ -3,7 +3,7 @@ use super::Plane;
 use super::Point;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Triangle(Point, Point, Point);
+pub struct Triangle(pub Point, pub Point, pub Point);
 
 impl Triangle {
     pub fn into_points(self) -> (Point, Point, Point) {

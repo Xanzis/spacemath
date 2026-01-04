@@ -43,7 +43,7 @@ impl fmt::Display for Line {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct Segment(Point, Point);
+pub struct Segment(pub Point, pub Point);
 
 impl Segment {
     pub fn to_line(self) -> Line {
