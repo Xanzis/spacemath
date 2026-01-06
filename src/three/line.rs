@@ -50,15 +50,20 @@ impl Segment {
         Line::from_points(self.0, self.1)
     }
 
+    pub fn param(self, p: Point) -> f64 {
+        // project point to self, return the position parameter along the line
+        // where self.0 has parameter 0.0 and self.1 has parameter 1.0
+        let ab = self.1 - self.0;
+        let ap = p - self.0;
+        ab.dot(ap) / ab.dot(ab)
+    }
+
     pub fn clamp(self, p: Point) -> Point {
         // project p onto the segment's line and clamp it to the segment bounds
-        let ab = self.1 - self.0;
-
-        let ap = p - self.0;
-
-        let t = ab.dot(ap) / ab.dot(ab);
+        let t = self.param(p);
         let t = t.clamp(0.0, 1.0);
 
+        let ab = self.1 - self.0;
         self.0 + (ab * t)
     }
 }
@@ -72,6 +77,20 @@ impl From<(Point, Point)> for Segment {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn param() {
+        let a: Point = (0.0, 1.0, 0.0).into();
+        let b: Point = (1.0, 0.0, 0.0).into();
+        let c: Point = (0.5, 0.5, 0.0).into();
+
+        let ab: Segment = (a, b).into();
+        let eps = 1e-6;
+
+        assert!(ab.param(a) < eps);
+        assert!((ab.param(b) - 1.0).abs() < eps);
+        assert!((ab.param(c) - 0.5).abs() < eps);
+    }
 
     #[test]
     fn clamp() {
