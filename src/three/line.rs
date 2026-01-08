@@ -74,6 +74,12 @@ impl From<(Point, Point)> for Segment {
     }
 }
 
+impl From<Segment> for (Point, Point) {
+    fn from(x: Segment) -> Self {
+        (x.0, x.1)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
