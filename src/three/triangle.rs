@@ -2,6 +2,8 @@ use super::Line;
 use super::Plane;
 use super::Point;
 
+use crate::two;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Triangle(pub Point, pub Point, pub Point);
 
@@ -28,10 +30,63 @@ impl Triangle {
 
         projected + (away * dist)
     }
+
+    pub fn proj_to_two(self, p: Point) -> two::Point {
+        // project to a two dimensional point in an orthonormal coordinate system on the triangle
+        let ab = (self.1 - self.0).to_unit();
+        let ac = (self.2 - self.0).to_unit();
+        let n = ab.cross(ac);
+        let u = ab;
+        let v = n.cross(ab);
+
+        let x = (p - self.0).dot(u);
+        let y = (p - self.0).dot(v);
+        (x, y).into()
+    }
+
+    pub fn proj_from_two(self, p: two::Point) -> Point {
+        // invert proj_to_two
+        let ab = (self.1 - self.0).to_unit();
+        let ac = (self.2 - self.0).to_unit();
+        let n = ab.cross(ac);
+        let u = ab;
+        let v = n.cross(ab);
+
+        let (x, y) = p.into();
+        self.0 + (u * x) + (v * y)
+    }
 }
 
 impl From<(Point, Point, Point)> for Triangle {
     fn from(tri: (Point, Point, Point)) -> Self {
         Self(tri.0, tri.1, tri.2)
+    }
+}
+
+mod tests {
+    #[test]
+    fn proj() {
+        use super::Triangle;
+        use crate::two;
+
+        let a = (1.0, 3.0, 5.0).into();
+        let b = (1.0, 4.0, 5.0).into();
+        let c = (2.0, 6.0, 2.0).into();
+
+        let t = Triangle(a, b, c);
+
+        let p_a = t.proj_to_two(a);
+        let p_b = t.proj_to_two(b);
+
+        let p_a_goal: two::Point = (0.0, 0.0).into();
+        let p_b_goal: two::Point = (1.0, 0.0).into();
+
+        let ppa = t.proj_from_two(p_a);
+        let ppb = t.proj_from_two(p_b);
+
+        assert!((p_a - p_a_goal).norm() < 1e-6);
+        assert!((p_b - p_b_goal).norm() < 1e-6);
+        assert!((a - ppa).norm() < 1e-6);
+        assert!((b - ppb).norm() < 1e-6);
     }
 }
