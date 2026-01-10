@@ -147,7 +147,7 @@ impl Ray {
         Ray { init, ang }
     }
 
-    pub fn from_point(init: Point, thru: Point) -> Self {
+    pub fn from_points(init: Point, thru: Point) -> Self {
         // Ray starting at init and passing through thru
         let ang = (thru - init).ang();
         Ray { init, ang }
