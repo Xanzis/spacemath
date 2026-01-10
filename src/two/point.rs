@@ -157,3 +157,26 @@ impl Dist for Point {
         v.norm()
     }
 }
+
+mod tests {
+    #[test]
+    fn ang() {
+        use super::Point;
+
+        let ang = 0.6;
+        let p = Point::unit(ang);
+        assert!((p.ang() - ang).abs() < 1e-6);
+
+        let ang = 1.8;
+        let p = Point::unit(ang);
+        assert!((p.ang() - ang).abs() < 1e-6);
+
+        let ang = 2.7;
+        let p = Point::unit(ang);
+        assert!((p.ang() - ang).abs() < 1e-6);
+
+        let ang = 3.1;
+        let p = Point::unit(ang);
+        assert!((p.ang() - ang).abs() < 1e-6);
+    }
+}

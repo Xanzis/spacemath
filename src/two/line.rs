@@ -147,6 +147,12 @@ impl Ray {
         Ray { init, ang }
     }
 
+    pub fn from_point(init: Point, thru: Point) -> Self {
+        // Ray starting at init and passing through thru
+        let ang = (thru - init).ang();
+        Ray { init, ang }
+    }
+
     pub fn dir(&self) -> Point {
         // unit vector representing the pointing direction
         Point::unit(self.ang)
