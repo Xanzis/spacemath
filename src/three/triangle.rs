@@ -37,10 +37,12 @@ impl Triangle {
         let ac = (self.2 - self.0).to_unit();
         let n = ab.cross(ac);
         let u = ab;
-        let v = n.cross(ab);
+        let v = n.cross(ab).to_unit();
 
-        let x = (p - self.0).dot(u);
-        let y = (p - self.0).dot(v);
+        let p = p - self.0;
+
+        let x = p.dot(u);
+        let y = p.dot(v);
         (x, y).into()
     }
 
@@ -50,10 +52,11 @@ impl Triangle {
         let ac = (self.2 - self.0).to_unit();
         let n = ab.cross(ac);
         let u = ab;
-        let v = n.cross(ab);
+        let v = n.cross(ab).to_unit();
 
         let (x, y) = p.into();
-        self.0 + (u * x) + (v * y)
+        let p = (u * x) + (v * y);
+        self.0 + p
     }
 }
 
@@ -88,5 +91,26 @@ mod tests {
         assert!((p_b - p_b_goal).norm() < 1e-6);
         assert!((a - ppa).norm() < 1e-6);
         assert!((b - ppb).norm() < 1e-6);
+    }
+
+    #[test]
+    fn proj_other() {
+        use super::Triangle;
+        use crate::two;
+
+        let a = (0.0, 2.5, 0.0).into();
+        let b = (-2.0, 0.0, 0.0).into();
+        let c = (1.0, -2.0, 0.0).into();
+
+        let t = Triangle(a, b, c);
+
+        let p_c = t.proj_to_two(c);
+        let ppc = t.proj_from_two(p_c);
+
+        dbg!(c);
+        dbg!(p_c);
+        dbg!(ppc);
+
+        assert!((c - ppc).norm() < 1e-6);
     }
 }
